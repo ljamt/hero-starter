@@ -176,11 +176,43 @@ var moves = {
   // This hero will try really hard not to die.
   coward : function(gameData, helpers) {
     return helpers.findNearestHealthWell(gameData);
-  }
- };
+  },
+
+  ultimateWarrior :function(gameData, helpers) {
+    var myHero = gameData.activeHero;
+
+    var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
+      if (boardTile.type === 'HealthWell') {
+        return true;
+      }
+    });
+
+    var weakerEnemyStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(enemyTile) {
+        return enemyTile.type === 'Hero' && enemyTile.team !== myHero.team && enemyTile.health < myHero.health;
+      });
+
+    var distanceToWeakerEnemy = weakerEnemyStats.distance;
+    var directionToWeakerEnemy = weakerEnemyStats.direction;
+
+    var distanceToHealthWell = healthWellStats.distance;
+    var directionToHealthWell = healthWellStats.direction;
+
+    if (myHero.health < 50) {
+      //Heal no matter what if low health
+      return directionToHealthWell;
+    } else if (myHero.health < 100 && distanceToHealthWell === 1) {
+      //Heal if you aren't full health and are close to a health well already
+      return directionToHealthWell;
+    } else if (distanceToWeakerEnemy < 3) {
+      return directionToWeakerEnemy;
+    }
+    //If healthy, go capture a diamond mine!
+    return helpers.findNearestUnownedDiamondMine(gameData);
+ }
+}
 
 //  Set our heros strategy
-var  move =  moves.aggressor;
+var  move =  moves.ultimateWarrior;
 
 // Export the move function here
 module.exports = move;
